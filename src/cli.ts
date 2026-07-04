@@ -1,5 +1,6 @@
 import readline from "readline";
 import { createAWSThread, triggerAWSRun, connectAWSStream } from "./remote.js";
+import { maskKey } from "./config.js";
 
 export async function runInteractiveCLI(apiKey: string) {
   const rl = readline.createInterface({
@@ -9,7 +10,7 @@ export async function runInteractiveCLI(apiKey: string) {
 
   console.log("==================================================");
   console.log("🧠 Pinky and the Brain - Remote Agent CLI REPL");
-  console.log("Initializing remote session...");
+  console.log(`Initializing remote session (API Key: ${maskKey(apiKey)})...`);
   console.log("==================================================");
 
   let threadId: string;

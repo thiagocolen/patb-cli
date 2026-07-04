@@ -208,11 +208,11 @@ Below is an example exchange that happens under the hood when communicating in b
 * **Solution**: Ensure your `.env` file containing the key is in the **Current Working Directory** (`process.cwd()`) from which you are running the command, or set it as a system environment variable.
 
 ### 2. Failed to Initialize Remote Thread
-* **Error message**: `❌ Failed to initialize remote thread: ...`
-* **Cause**: This usually indicates a network connection failure to the remote API hostname (`d33ib4uu7f4xpi.cloudfront.net`) or an invalid API key.
+* **Error message**: `❌ Failed to initialize remote thread: {"error":"401 Unauthorized"}` (or other network error).
+* **Cause**: This usually indicates a network connection failure to the remote API hostname (`d33ib4uu7f4xpi.cloudfront.net`) or an invalid/expired/incorrect API key.
 * **Solution**:
   - Verify your internet connection.
-  - Check that the value of `PATBA_API_KEY` is valid.
+  - Check that the value of `PATBA_API_KEY` is correct, valid, and active.
   - Test connectivity manually using `curl`:
     ```bash
     curl -X POST -H "X-API-Key: YOUR_API_KEY" https://d33ib4uu7f4xpi.cloudfront.net/threads

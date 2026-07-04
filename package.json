@@ -1,5 +1,5 @@
 {
-  "name": "patb-cli",
+  "name": "@thiagocolen/patb-cli",
   "version": "0.1.0",
   "description": "Interactive CLI and Zed ACP Bridge for Pinky and the Brain remote service",
   "type": "module",
