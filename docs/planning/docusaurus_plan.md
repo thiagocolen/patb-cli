@@ -6,19 +6,18 @@ This document outlines the detailed implementation plan for scaffolding, buildin
 
 ### 1. Architectural Strategy
 
-To keep the repository clean and avoid dependency conflicts between the CLI tool and the documentation website, the website will be scaffolded in a dedicated subdirectory of the repository: `/website`.
+The documentation website will be scaffolded in the dedicated `docs/` directory of the repository (`D:\_code-projects\patb-cli\docs\`).
 
 This ensures:
-- Isolation of dependencies (`package.json`, `node_modules`, etc.).
-- Independent development and dependency management.
-- Simplified automated builds and CI/CD triggers.
+- Isolation of documentation dependencies (`package.json`, `node_modules`, etc.) inside `docs/`.
+- Clear directory mapping of all documentation assets under one root `docs/` directory.
+- Independent development and deployment cycles.
 
 ```
 patb-cli/ (repository root)
-├── docs/
-│   └── planning/
-│       └── docusaurus_plan.md (this document)
-├── website/ (Docusaurus project directory)
+├── docs/ (Docusaurus project directory)
+│   ├── planning/
+│   │   └── docusaurus_plan.md (this document)
 │   ├── blog/
 │   ├── docs/
 │   ├── src/
@@ -38,16 +37,20 @@ patb-cli/ (repository root)
 ### 2. Scaffolding Step-by-Step
 
 #### Step 2.1: Initialize Docusaurus
-Run the following command at the repository root to scaffold a new Docusaurus site using TypeScript and the classic template in the `website/` directory:
+Since the `docs/planning` directory already exists, `create-docusaurus` might complain about a non-empty directory. To handle this safely:
+1. Temporarily move or backup the `docs/planning` folder.
+2. Run the following command at the repository root to scaffold a new Docusaurus site using TypeScript and the classic template in the `docs/` directory:
 
 ```bash
-npx create-docusaurus@latest website classic --typescript
+npx create-docusaurus@latest docs classic --typescript
 ```
 
+3. Restore the `docs/planning` folder back into the `docs/` directory.
+
 #### Step 2.2: Standard Clean-up
-Docusaurus scaffolds some default template content. To prepare the project for the actual CLI docs, perform the following clean-up within the `website/` directory:
-1. Keep the standard `docs/` structure but clear out the placeholder tutorials.
-2. Update the landing page `/website/src/pages/index.tsx` to point to the `patb-cli` introduction documentation.
+Docusaurus scaffolds some default template content. To prepare the project for the actual CLI docs, perform the following clean-up within the `docs/` directory:
+1. Keep the standard `docs/docs/` structure but clear out the placeholder tutorials.
+2. Update the landing page `/docs/src/pages/index.tsx` to point to the `patb-cli` introduction documentation.
 
 #### Step 2.3: Root Integration (Optional but Recommended)
 To allow developers to manage the documentation from the repository root, add helper scripts to the root `package.json`:
@@ -55,9 +58,9 @@ To allow developers to manage the documentation from the repository root, add he
 ```json
 "scripts": {
   "build": "tsc",
-  "docs:install": "npm install --prefix website",
-  "docs:start": "npm run start --prefix website",
-  "docs:build": "npm run build --prefix website"
+  "docs:install": "npm install --prefix docs",
+  "docs:start": "npm run start --prefix docs",
+  "docs:build": "npm run build --prefix docs"
 }
 ```
 
@@ -65,11 +68,11 @@ To allow developers to manage the documentation from the repository root, add he
 
 ### 3. Local Build & Development
 
-Within the `/website` directory, developers can run the following standard commands to develop and build the site locally:
+Within the `/docs` directory, developers can run the following standard commands to develop and build the site locally:
 
 #### Install Dependencies
 ```bash
-cd website
+cd docs
 npm install
 ```
 
@@ -80,7 +83,7 @@ npm run start
 ```
 
 #### Production Build
-Compiles the site into static HTML, CSS, and JS assets inside the `/website/build` directory:
+Compiles the site into static HTML, CSS, and JS assets inside the `/docs/build` directory:
 ```bash
 npm run build
 ```
@@ -95,7 +98,7 @@ npm run serve
 
 ### 4. Docusaurus Configuration (`docusaurus.config.ts`)
 
-The Docusaurus configuration must be updated to support GitHub Pages hosting. Modify `/website/docusaurus.config.ts` with the following deployment and branding parameters:
+The Docusaurus configuration must be updated to support GitHub Pages hosting. Modify `/docs/docusaurus.config.ts` with the following deployment and branding parameters:
 
 ```typescript
 import {themes as prismeThemes} from 'prism-react-renderer';
@@ -131,7 +134,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/thiagocolen/patb-cli/edit/main/website/',
+          editUrl: 'https://github.com/thiagocolen/patb-cli/edit/master/docs/',
         },
         blog: {
           showReadingTime: true,
@@ -207,7 +210,7 @@ export default config;
 
 ### 5. Automated Build & Publish with GitHub Actions
 
-To completely automate the build and deploy process, we will set up a GitHub Actions workflow that executes whenever a change is pushed to the `main` branch.
+To completely automate the build and deploy process, we will set up a GitHub Actions workflow that executes whenever a change is pushed to the `master` branch.
 
 Create a workflow file at `.github/workflows/deploy-docs.yml`:
 
@@ -217,9 +220,9 @@ name: Deploy Documentation
 on:
   push:
     branches:
-      - main
+      - master
     paths:
-      - 'website/**'
+      - 'docs/**'
       - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:
 
@@ -241,23 +244,23 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: website/package-lock.json
+          cache-dependency-path: docs/package-lock.json
 
       - name: Install Dependencies
         run: |
-          cd website
+          cd docs
           npm ci
 
       - name: Build Docusaurus Website
         run: |
-          cd website
+          cd docs
           npm run build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./website/build
+          publish_dir: ./docs/build
           publish_branch: gh-pages
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
@@ -267,7 +270,7 @@ jobs:
 
 ### 6. GitHub Repository Setup Settings
 
-Once the planning is approved and code is merged into `main`, complete the following settings in the repository settings panel on GitHub:
+Once the planning is approved and code is merged into `master`, complete the following settings in the repository settings panel on GitHub:
 
 1. **Pages Configuration**:
    - Go to **Settings** > **Pages** (under Code and automation).
