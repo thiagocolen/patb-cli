@@ -8,7 +8,10 @@
     "patb-cli": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "docs:install": "npm install --prefix docs",
+    "docs:start": "npm run start --prefix docs",
+    "docs:build": "npm run build --prefix docs"
   },
   "dependencies": {
     "dotenv": "^16.4.5"
