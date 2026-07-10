@@ -2,46 +2,51 @@
 sidebar_position: 1
 ---
 
-# Tutorial Intro
+# Introduction
 
-Let's discover **Docusaurus in less than 5 minutes**.
+**Pinky and the Brain CLI** (`patb-cli`) is an interactive command-line interface and
+**Zed Agent Connection Protocol (ACP)** bridge server for the remote "Pinky and the
+Brain" agent service.
 
-## Getting Started
+With `patb-cli`, you can converse with the remote agent directly from your terminal, or
+integrate it seamlessly into the [Zed Editor](https://zed.dev) as a custom AI assistant.
 
-Get started by **creating a new site**.
+## Features
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+- **Interactive CLI REPL** — start a direct conversation with the agent in your terminal.
+- **Zed ACP Bridge** — implements the ACP (JSON-RPC 2.0 over standard I/O) to function as
+  a Zed-compatible external agent server.
+- **Real-Time Streaming** — supports progress notifications and real-time streaming of
+  response chunks.
+- **Auto-Config** — loads configuration parameters (such as the API key) from
+  environment variables or a local `.env` file.
 
-### What you'll need
+## Architecture Overview
 
-- [Node.js](https://nodejs.org/en/download/) version 20.0 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
+The CLI acts as a client wrapper and gateway for the remote agent service hosted at
+`d33ib4uu7f4xpi.cloudfront.net`:
 
-## Generate a new site
-
-Generate a new Docusaurus site using the **classic template**.
-
-The classic template will automatically be added to your project after you run the command:
-
-```bash
-npm init docusaurus@latest my-website classic
+```mermaid
+graph TD
+    A[User / Zed Editor] -->|Interactive Prompt or ACP RPC| B(patb-cli)
+    B -->|1. Create Thread| C[Remote Service]
+    B -->|2. Trigger Run| C
+    C -->|3. Event Stream| B
+    B -->|4. Format Output / Progress| A
 ```
 
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
+See [Architecture](/docs/developer/architecture) for a deeper look at how the two
+operational modes use this flow.
 
-The command also installs all necessary dependencies you need to run Docusaurus.
+## Where to go next
 
-## Start your site
-
-Run the development server:
-
-```bash
-cd my-website
-npm run start
-```
-
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
-
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+- New to `patb-cli`? Start with [Installation](/docs/end-user/installation) and
+  [Configuration](/docs/end-user/configuration).
+- Want to use it day-to-day? See [CLI Usage](/docs/end-user/cli-usage) or
+  [Zed Bridge Usage](/docs/end-user/zed-bridge-usage).
+- Hit a snag? Check the [FAQ](/docs/end-user/faq) and
+  [Troubleshooting](/docs/end-user/troubleshooting) guides.
+- Contributing or extending `patb-cli`? Read the
+  [Project Structure](/docs/developer/project-structure),
+  [Architecture](/docs/developer/architecture), and
+  [Source Code Reference](/docs/developer/source-code-reference).

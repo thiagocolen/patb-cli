@@ -1,0 +1,74 @@
+---
+sidebar_position: 3
+---
+
+# CLI Usage (Interactive REPL)
+
+The Interactive REPL is the default operational mode. It opens a direct, conversational
+session with the remote agent.
+
+## Starting a session
+
+```bash
+node dist/index.js
+# or, if linked/installed globally:
+patb-cli
+```
+
+On startup, the CLI:
+1. Prints a banner and the masked API key it loaded.
+2. Creates a new remote thread (`createAWSThread`) and prints the `Remote Thread ID`.
+3. Prompts you for input with `👤 You:`.
+
+## Controls
+
+- **Converse** — type your message and press `Enter`. The CLI triggers a run on the
+  remote thread and streams the response back.
+- **Progress tracking** — background workflow state (for example
+  `🔄 [writerState] running`) is written to `stderr`, keeping `stdout` clean if you
+  redirect or pipe it.
+- **Exit** — type `exit` or `quit` to end the session.
+
+## Example transcript
+
+```text
+==================================================
+🧠 Pinky and the Brain - Remote Agent CLI REPL
+Initializing remote session...
+==================================================
+🧵 Remote Thread ID: thread_abc123xyz
+Type your message to prompt the agent workflow.
+Type 'exit' or 'quit' to end the session.
+==================================================
+
+👤 You: How do we take over the world tonight?
+
+🤖 Agent executing...
+
+🔄 [instructorState] running
+🔄 [writerState] running
+
+--------------------------------------------------
+🤖 Response:
+Gee, Pinky, the same thing we do every night—try to take over the world!
+
+Our plan tonight involves:
+1. Building a giant electromagnetic magnet.
+2. Targeting the global digital communications satellite grid.
+3. Demanding 100 million dollars in exchange for restoring internet access.
+--------------------------------------------------
+```
+
+## How responses are chosen
+
+Each streamed `complete` event carries a workflow-specific result payload. The CLI
+(via `connectAWSStream` in `src/remote.ts`) picks the response text in this priority
+order:
+1. `writerState.draftArticle` (if present and not yet saved).
+2. `instructorState.explanation`.
+3. `developerState.testResults` (rendered as a pass/exit-code summary).
+4. The last AI message in `messages`.
+5. A generic `"Workflow completed successfully."` fallback, or the reported `error`.
+
+For running as a background agent server instead of an interactive terminal session,
+see [Zed Bridge Usage](./zed-bridge-usage).

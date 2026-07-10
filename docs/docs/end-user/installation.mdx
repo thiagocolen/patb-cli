@@ -1,0 +1,52 @@
+---
+sidebar_position: 1
+---
+
+# Installation
+
+## Prerequisites
+
+- **Node.js** v20.0.0 or higher recommended.
+- **npm** (comes bundled with Node.js).
+
+## 1. Get the source
+
+Clone or navigate to the `patb-cli` project directory, then install the developer
+dependencies:
+
+```bash
+npm install
+```
+
+## 2. Build the CLI
+
+Compile the TypeScript source code to JavaScript:
+
+```bash
+npm run build
+```
+
+This compiles `src/` into the `dist/` directory. `dist/index.js` is the compiled
+entrypoint referenced by the `bin` field in `package.json`.
+
+## 3. Run it
+
+Run the compiled entrypoint directly with Node:
+
+```bash
+node dist/index.js
+```
+
+Or install/link the package so the `patb-cli` command is available globally:
+
+```bash
+npm link
+# or
+npm install -g .
+```
+
+```bash
+patb-cli
+```
+
+Next, configure your API key — see [Configuration](./configuration).

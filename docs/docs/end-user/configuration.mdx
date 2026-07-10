@@ -1,0 +1,45 @@
+---
+sidebar_position: 2
+---
+
+# Configuration
+
+`patb-cli` authenticates every request to the remote agent service with a single
+required credential: `PATBA_API_KEY`.
+
+Configuration is loaded by `loadConfig()` in `src/config.ts`, which reads a `.env` file
+from the **current working directory** (`process.cwd()`) without overriding any variable
+that is already set in the environment (`dotenv.config({ override: false })`).
+
+## Option A: Local `.env` file (recommended)
+
+Create a `.env` file in the directory where you'll run the CLI command:
+
+```env
+PATBA_API_KEY=your_secret_api_key_here
+```
+
+## Option B: Environment variable
+
+Export the key directly in your shell:
+
+- **Windows (PowerShell):**
+  ```powershell
+  $env:PATBA_API_KEY="your_secret_api_key_here"
+  ```
+- **macOS / Linux:**
+  ```bash
+  export PATBA_API_KEY="your_secret_api_key_here"
+  ```
+
+:::caution
+If `PATBA_API_KEY` is not set by either method, the CLI prints an error and exits
+immediately (`process.exit(1)`) before starting the REPL or bridge server.
+:::
+
+## Key masking
+
+When the interactive REPL starts, it prints the configured key back to you for
+confirmation — but masked via `maskKey()`. Keys longer than 8 characters are shown as
+`first4...last4` (for example `abcd...wxyz`); shorter keys are shown as `****`. The full
+key is never logged.

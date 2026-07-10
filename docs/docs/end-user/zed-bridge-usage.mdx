@@ -1,0 +1,62 @@
+---
+sidebar_position: 4
+---
+
+# Zed ACP Bridge Usage
+
+Bridge mode runs `patb-cli` as a background server that speaks the Zed **Agent
+Connection Protocol** (JSON-RPC 2.0 over `stdin`/`stdout`), so Zed can treat the remote
+"Pinky and the Brain" service as a custom external agent.
+
+## Starting bridge mode
+
+```bash
+node dist/index.js --bridge
+# or
+patb-cli --bridge
+```
+
+(`-b` is the short alias for `--bridge`.)
+
+## Configuring Zed
+
+1. Open Zed.
+2. Open your Zed configuration via the Command Palette
+   (`ctrl-shift-p` / `cmd-shift-p` → `zed: open settings`).
+3. Add the server entry under the `agent_servers` block:
+
+```json
+{
+  "agent_servers": {
+    "patb-agent": {
+      "type": "custom",
+      "command": "node",
+      "args": ["/absolute/path/to/patb-cli/dist/index.js", "--bridge"]
+    }
+  }
+}
+```
+
+:::tip
+Use the absolute path to your compiled `dist/index.js`, and use forward slashes `/`
+even on Windows.
+:::
+
+4. Save the settings. You can now use Zed's Agent panel to start threads and select
+   the `the-brain` agent.
+
+## Protocol overview
+
+The bridge (`src/bridge.ts`) implements these JSON-RPC methods:
+
+| Method | Behavior |
+|---|---|
+| `initialize` | Marks the server initialized and returns `serverInfo` / `capabilities`. |
+| `session/new` | Creates a new remote thread (`createAWSThread`) and maps it to a local `sessionId`. |
+| `session/prompt` | Triggers a run for the session's thread and streams `session/update` notifications back until the run completes (`stopReason: "end_turn"`). |
+| `agents/list` | Returns the single available agent, `the-brain`. |
+
+Progress and final responses are delivered as `session/update` notifications with
+`sessionUpdate: "agent_message_chunk"`, mirroring the streaming behavior used in
+[CLI Usage](./cli-usage). See [ACP Protocol](/docs/developer/acp-protocol) for the full
+request/response reference, including error codes.
