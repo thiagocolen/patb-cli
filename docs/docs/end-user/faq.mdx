@@ -1,0 +1,42 @@
+---
+sidebar_position: 6
+---
+
+# FAQ
+
+### What is `patb-cli`?
+
+An interactive command-line interface and Zed ACP bridge server for the remote "Pinky
+and the Brain" agent service. See [Introduction](/docs/intro).
+
+### Do I need an API key?
+
+Yes. Every mode requires `PATBA_API_KEY`, configured via a `.env` file or an environment
+variable. See [Configuration](./configuration).
+
+### What's the difference between REPL mode and Bridge mode?
+
+REPL mode (the default) is an interactive terminal conversation. Bridge mode
+(`--bridge`/`-b`) runs the same underlying remote-agent client as a JSON-RPC 2.0 server
+so Zed Editor can use it as a custom agent. Both modes share the same remote client
+(`src/remote.ts`). See [CLI Usage](./cli-usage) and [Zed Bridge Usage](./zed-bridge-usage).
+
+### Where does `patb-cli` send my prompts?
+
+To the remote service hosted at `d33ib4uu7f4xpi.cloudfront.net`, over HTTPS, using
+your `PATBA_API_KEY` for authentication.
+
+### Can I use `patb-cli` without installing it globally?
+
+Yes — after `npm install` and `npm run build`, run `node dist/index.js` directly from
+the project directory.
+
+### Why is progress logged to `stderr` instead of `stdout`?
+
+So `stdout` stays clean for the final response, which is useful if you redirect or pipe
+CLI output. See [CLI Usage](./cli-usage#controls).
+
+### Something isn't working — what should I check first?
+
+See [Troubleshooting](./troubleshooting) for the most common setup and connectivity
+issues.

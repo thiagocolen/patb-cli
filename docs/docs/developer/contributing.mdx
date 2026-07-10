@@ -1,0 +1,60 @@
+---
+sidebar_position: 5
+---
+
+# Contributing
+
+## CLI development loop
+
+```bash
+npm install         # install dependencies
+npm run build        # compile src/ -> dist/ via tsc
+node dist/index.js    # run the compiled CLI
+```
+
+There is no separate test or lint script in `package.json` today; verify changes by
+building and exercising the affected mode (REPL or `--bridge`) manually.
+
+## Documentation development loop
+
+The documentation site in `docs/` is an independent Docusaurus project with its own
+`package.json`. Helper scripts are exposed at the repository root:
+
+```bash
+npm run docs:install   # npm install --prefix docs
+npm run docs:start     # local dev server with hot reload
+npm run docs:build      # production build, output in docs/build
+```
+
+`onBrokenLinks` is set to `'throw'` in `docs/docusaurus.config.ts`, so
+`npm run docs:build` will fail the build if a cross-doc link is broken — always run it
+after restructuring or renaming docs pages.
+
+## Coding conventions observed in `src/`
+
+- **ESM only**: the package is `"type": "module"`; internal relative imports use
+  explicit `.js` extensions even though the source files are `.ts`.
+- **One responsibility per module**: `config.ts` never touches the network, `remote.ts`
+  never touches `process.argv` or `readline`, and `index.ts` never talks to the remote
+  service directly. Keep new code inside the module that already owns that concern
+  (see [Project Structure](./project-structure)).
+- **Shared remote client**: `cli.ts` and `bridge.ts` both consume the same
+  `createAWSThread` / `triggerAWSRun` / `connectAWSStream` functions from `remote.ts`
+  rather than issuing their own HTTP requests, so behavior stays consistent across both
+  front ends.
+- **Fail fast on config**: credential/config validation happens once, in
+  `loadConfig()`, before either front end starts.
+
+## Adding a feature
+
+- **New CLI flag** → `src/index.ts` (dispatch) +
+  [Command Reference](/docs/end-user/command-reference).
+- **New ACP method** → `src/bridge.ts` (`switch (request.method)`) +
+  [ACP Protocol](./acp-protocol).
+- **New remote endpoint/behavior** → `src/remote.ts`, consumed by both `cli.ts` and
+  `bridge.ts` — see [Architecture](./architecture) for how the two front ends share it.
+
+## Opening a pull request
+
+Include a concise description of the change, and update the relevant documentation
+page(s) under `docs/docs/` in the same PR whenever behavior described here changes.

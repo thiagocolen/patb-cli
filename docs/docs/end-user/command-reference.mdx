@@ -1,0 +1,26 @@
+---
+sidebar_position: 5
+---
+
+# Command-Line Reference
+
+## Flags
+
+| Flag | Alias | Description |
+|------|-------|-------------|
+| `--bridge` | `-b` | Starts the server in Zed ACP JSON-RPC 2.0 Bridge mode. |
+| `--help` | `-h` | Prints the CLI help menu showing usage and exits. |
+
+If no flags are supplied, the CLI defaults to the **Interactive REPL** mode.
+
+## Environment variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `PATBA_API_KEY` | Yes | API key used to authenticate with the remote agent service. Can be set via `.env` or the shell environment. See [Configuration](./configuration). |
+
+## Exit codes
+
+- The process exits with code `1` if `PATBA_API_KEY` is missing, or if the initial
+  remote thread creation fails in REPL mode.
+- Typing `exit` or `quit` in the REPL exits cleanly with code `0`.

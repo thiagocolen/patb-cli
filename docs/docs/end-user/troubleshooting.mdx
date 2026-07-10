@@ -1,0 +1,44 @@
+---
+sidebar_position: 7
+---
+
+# Troubleshooting
+
+### 1. `Error: PATBA_API_KEY environment variable is not set.`
+
+- **Cause**: The CLI could not find `PATBA_API_KEY` in the environment or in a `.env`
+  file in the directory where the command was executed.
+- **Solution**: Ensure your `.env` file is in the **current working directory**
+  (`process.cwd()`) from which you run the command, or export the variable directly.
+  See [Configuration](./configuration).
+
+### 2. Failed to initialize remote thread
+
+- **Error message**: `❌ Failed to initialize remote thread: {"error":"401 Unauthorized"}`
+  (or another network error).
+- **Cause**: Usually a network connection failure to `d33ib4uu7f4xpi.cloudfront.net`, or
+  an invalid/expired/incorrect API key.
+- **Solution**:
+  - Verify your internet connection.
+  - Check that `PATBA_API_KEY` is correct, valid, and active.
+  - Test connectivity manually:
+    ```bash
+    curl -X POST -H "X-API-Key: YOUR_API_KEY" https://d33ib4uu7f4xpi.cloudfront.net/threads
+    ```
+
+### 3. Zed fails to load the custom agent server
+
+- **Cause**: Zed cannot find the `node` executable, or the path to `index.js` in your
+  `settings.json` is incorrect.
+- **Solution**:
+  - Confirm you've compiled the source with `npm run build`.
+  - Verify the path to `dist/index.js` is absolute and uses forward slashes `/`.
+  - If using a global install, confirm `patb-cli` is on your `PATH` by running
+    `patb-cli -h` in a new terminal.
+  - Check Zed's logs (`zed: open log` in the command palette) for the exact error.
+
+### 4. `import` / module resolution errors when running `node dist/index.js`
+
+- **Cause**: Running files without building first, or a Node version mismatch.
+- **Solution**: Update Node.js to v20+, and always run `npm run build` after editing
+  TypeScript source.

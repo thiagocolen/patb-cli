@@ -1,0 +1,86 @@
+---
+sidebar_position: 3
+---
+
+# Source Code Reference
+
+All source lives in `src/` and is compiled by `tsc` (per `tsconfig.json`) to `dist/`.
+The package is ESM (`"type": "module"` in `package.json`), so internal imports use
+explicit `.js` extensions (e.g. `import { loadConfig } from "./config.js"`).
+
+## `src/index.ts`
+
+The CLI entrypoint (`#!/usr/bin/env node`). Responsibilities:
+- Calls `loadConfig()` to obtain `{ apiKey }`, exiting the process if it's missing.
+- Inspects `process.argv` for `--bridge`/`-b` (→ `runBridgeMode(apiKey)`),
+  `--help`/`-h` (→ prints usage and returns), or neither (→ `runInteractiveCLI(apiKey)`).
+
+## `src/config.ts`
+
+- **`loadConfig()`** — loads `.env` from `process.cwd()` via `dotenv`, with
+  `override: false` (real environment variables always win). Reads
+  `process.env.PATBA_API_KEY`; if unset, prints an error to `stderr` and calls
+  `process.exit(1)`. Returns `{ apiKey }`.
+- **`maskKey(key: string): string`** — returns `"undefined"` for an empty key, `"****"`
+  for keys of 8 characters or fewer, otherwise `"<first 4>...<last 4>"`.
+
+## `src/cli.ts`
+
+- **`runInteractiveCLI(apiKey: string)`** — sets up a `readline` interface over
+  `stdin`/`stdout`, prints the startup banner (with the masked key), and calls
+  `createAWSThread` to open a thread. Then loops on `askQuestion()`:
+  - Empty input re-prompts.
+  - `exit` / `quit` (case-insensitive) closes the interface and exits with code `0`.
+  - Any other input calls `triggerAWSRun` then `connectAWSStream`, printing progress to
+    `stderr` and the final response (or error) to `stdout`/`stderr`, then re-prompting.
+
+## `src/bridge.ts`
+
+- **`runBridgeMode(apiKey: string)`** — sets up a non-TTY `readline` interface that
+  parses each incoming line as a JSON-RPC request and dispatches on `request.method`:
+  - `initialize` — sets an `isInitialized` flag; responds with `serverInfo` and
+    `capabilities: { agents: true }`.
+  - `session/new` — requires `initialize` first; calls `createAWSThread` and stores the
+    resulting thread id in an in-memory `Map<localSessionId, threadId>`.
+  - `session/prompt` — looks up the session's thread id, extracts prompt text (string or
+    an array of `{type: "text", text}` blocks), then calls `triggerAWSRun` and
+    `connectAWSStream`, forwarding progress/results as `session/update` notifications and
+    finishing with a `stopReason: "end_turn"` result.
+  - `agents/list` — returns the single static agent descriptor for `the-brain`.
+  - Any other method — responds with a JSON-RPC `-32601 Method not found` error.
+  - Malformed JSON on a line produces a `-32700 Parse error` response (with `id: null`).
+- **`sendError(id, code, message)`** — helper that writes a JSON-RPC error response to
+  `stdout`.
+
+See [ACP Protocol](./acp-protocol) for the full list of methods and error codes.
+
+## `src/remote.ts`
+
+All functions target the fixed remote host `d33ib4uu7f4xpi.cloudfront.net` over
+Node's built-in `https` module (no HTTP client dependency):
+
+- **`createAWSThread(apiKey): Promise<string>`** — `POST /threads` with the
+  `X-API-Key` header; resolves the parsed `thread_id`, or rejects if the response body
+  has no `thread_id`.
+- **`triggerAWSRun(apiKey, threadId, prompt): Promise<string>`** — `POST
+  /threads/:threadId/runs` with body `{ agentName: "the-brain", prompt, wait: false }`;
+  resolves the parsed `run_id`.
+- **`connectAWSStream(apiKey, threadId, runId, callbacks)`** — `GET
+  /threads/:threadId/runs/:runId/stream` with `Accept: text/event-stream`; buffers
+  chunks, splits on newlines, and parses any `data: {...}` line as JSON. Dispatches:
+  - `event: "progress"` → `callbacks.onProgress(node, status)`.
+  - `event: "complete"` → resolves the response text using the priority order described
+    in [CLI Usage](/docs/end-user/cli-usage#how-responses-are-chosen), then calls
+    `callbacks.onComplete(responseText)`.
+  - Any request-level error → `callbacks.onError(err)`.
+  - Non-JSON stream fragments are silently ignored.
+
+## Extending the CLI
+
+- **Add a new flag**: handle it in `src/index.ts` alongside `--bridge`/`--help`, and
+  document it in [Command Reference](/docs/end-user/command-reference).
+- **Add a new ACP method**: add a `case` in the `switch (request.method)` block of
+  `src/bridge.ts`, and document it in [ACP Protocol](./acp-protocol).
+- **Change remote response parsing**: update the `event: "complete"` handling in
+  `connectAWSStream` (`src/remote.ts`); both `cli.ts` and `bridge.ts` will pick up the
+  change automatically since they share this function.

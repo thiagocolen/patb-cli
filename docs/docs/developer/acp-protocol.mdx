@@ -1,0 +1,97 @@
+---
+sidebar_position: 4
+---
+
+# ACP Protocol Reference
+
+`src/bridge.ts` implements a subset of the Zed **Agent Connection Protocol** as
+JSON-RPC 2.0 over `stdin` (requests in) / `stdout` (responses and notifications out),
+one JSON object per line.
+
+## Methods
+
+### `initialize`
+
+Marks the bridge as initialized and echoes back the negotiated protocol version.
+
+Request:
+```json
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"1.0"}}
+```
+
+Response:
+```json
+{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"1.0","serverInfo":{"name":"patb-cli-bridge","version":"1.0.0"},"capabilities":{"agents":true}}}
+```
+
+### `session/new`
+
+Requires `initialize` to have been called first. Creates a new remote thread and
+returns an opaque local session id.
+
+- Params: none required.
+- Result: `{ "sessionId": "session_<random>" }`.
+- Errors: `-32002` if not yet initialized; `-32603` if remote thread creation fails.
+
+### `session/prompt`
+
+Requires an existing session (from `session/new`). Triggers a run on the session's
+remote thread and streams the result back as notifications before resolving the
+request itself.
+
+- Params: `{ "sessionId": string, "prompt": string | Array<{type: "text", text: string}> }`
+  — array prompts have their `text` blocks joined with newlines.
+- Emits zero or more `session/update` notifications (see below) while the run is in
+  progress and once with the final response.
+- Result (once the run completes): `{ "stopReason": "end_turn" }`.
+- Errors: `-32002` if not initialized; `-32602` if the session id is unknown;
+  `-32603` if triggering the run or the stream connection fails.
+
+### `agents/list`
+
+Returns the static list of agents this bridge exposes.
+
+Response:
+```json
+{"jsonrpc":"2.0","id":1,"result":{"agents":[{"name":"the-brain","description":"Speaks as The Brain, an instructor on technical domains and world domination."}]}}
+```
+
+## Notifications
+
+### `session/update`
+
+Sent during `session/prompt` handling, once per progress event and once for the final
+result, each as an `agent_message_chunk`:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "session/update",
+  "params": {
+    "sessionId": "session_abc123",
+    "update": {
+      "sessionUpdate": "agent_message_chunk",
+      "messageId": "progress_writerState_1699999999999",
+      "content": {"type": "text", "text": "🔄 [writerState] running\n"}
+    }
+  }
+}
+```
+
+The final chunk uses a `result_<timestamp>` message id and carries the resolved
+response text (see the response-selection order in
+[CLI Usage](/docs/end-user/cli-usage#how-responses-are-chosen)), immediately followed
+by the `session/prompt` result with `stopReason: "end_turn"`.
+
+## Error codes
+
+| Code | Meaning |
+|---|---|
+| `-32700` | Parse error — a line could not be parsed as JSON. |
+| `-32601` | Method not found — `request.method` didn't match a known case. |
+| `-32602` | Invalid params — e.g. `session/prompt` referenced an unknown `sessionId`. |
+| `-32603` | Internal error — remote thread/run/stream call failed. |
+| `-32002` | Server not initialized — `session/new` or `session/prompt` called before `initialize`. |
+
+All errors are returned via `sendError(id, code, message)`, which writes a standard
+JSON-RPC 2.0 error object to `stdout`.
