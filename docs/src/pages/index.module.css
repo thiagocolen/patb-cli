@@ -3,23 +3,24 @@
  * and scoped locally.
  */
 
-/* The banner is the hot end of the brand: orange running down to the logo's
-   red. Dark-on-light is what the palette forces here — the cream lettering
-   this banner used to carry manages 3.3:1 on red, short of AA. */
+/* A dark green banner, carrying the cream lettering that a dark background
+   allows. Nothing else on the site is green: the shared logo and favicon are
+   what tie this site to the agent's docs, and the banner is what tells the
+   two apart. */
 .heroBanner {
-  --ifm-hero-text-color: var(--patb-color-ink);
+  --ifm-hero-text-color: var(--patb-color-cream);
   padding: 4rem 0;
   text-align: center;
   position: relative;
   overflow: hidden;
-  background-color: var(--patb-color-orange);
+  background-color: var(--patb-color-green-darkest);
 }
 
 /* Animated glitch gradient: the layer is oversized (inset -20%) so the
    skew/translate keyframes never expose an edge, and the hue-rotate runs
    on its own filter so it doesn't wash out the pattern or content. The
-   darkest stop is red, which holds 4.8:1 against the ink — the tightest
-   margin anywhere in the pair, and what fixes how dark that ink is. */
+   lightest stop is the one that matters for a dark banner, and it holds
+   7.2:1 against the cream. */
 .heroBanner::before {
   content: '';
   position: absolute;
@@ -28,9 +29,9 @@
   pointer-events: none;
   background: linear-gradient(
     45deg,
-    var(--patb-color-amber) 0%,
-    var(--patb-color-orange) 50%,
-    var(--patb-color-red) 100%
+    var(--patb-color-green-darkest) 0%,
+    var(--patb-color-green-dark) 50%,
+    var(--patb-color-green) 100%
   );
   background-size: 100% 100%;
   animation: heroGradientGlitch 8s ease alternate infinite;
@@ -40,12 +41,13 @@
    weave). Every stop is transparent-backed, not a solid second color, so
    the animated gradient in ::before keeps showing through underneath.
 
-   Both facet layers are cream at different strengths, never a dark tint.
-   That is a contrast decision, not a taste one: a weave that only ever
-   *lightens* means the bare ramp is the worst case the ink faces, so the
-   4.8:1 measured against red is a floor rather than an average. The 7%
-   ink facet this pattern started with looked better and took red to
-   4.3:1, under AA — so neither this site nor its sibling has one. */
+   Both facet layers darken, and neither lightens. That is a contrast
+   decision rather than a taste one, and it is the same rule the agent's
+   warm banner follows, inverted for a dark background: a weave that only
+   ever moves *away* from the text colour means the bare ramp is the worst
+   case, so the measured 7.2:1 is a floor and not an average. Carrying the
+   warm banner's cream facets straight over would have inverted that — its
+   stronger layer takes this ramp's lightest stop to 3.6:1, under AA. */
 .heroBanner::after {
   content: '';
   position: absolute;
@@ -54,12 +56,12 @@
   pointer-events: none;
   background-image: linear-gradient(
       135deg,
-      rgba(255, 248, 232, 0.30) 25%,
+      rgba(3, 20, 13, 0.32) 25%,
       transparent 25%
     ),
-    linear-gradient(225deg, rgba(255, 248, 232, 0.12) 25%, transparent 25%),
-    linear-gradient(315deg, rgba(255, 248, 232, 0.30) 25%, transparent 25%),
-    linear-gradient(45deg, rgba(255, 248, 232, 0.12) 25%, transparent 25%);
+    linear-gradient(225deg, rgba(3, 20, 13, 0.14) 25%, transparent 25%),
+    linear-gradient(315deg, rgba(3, 20, 13, 0.32) 25%, transparent 25%),
+    linear-gradient(45deg, rgba(3, 20, 13, 0.14) 25%, transparent 25%);
   background-position: -14px 0, -14px 0, 0 0, 0 0;
   background-size: 28px 28px;
 }
@@ -72,25 +74,13 @@
   z-index: 2;
 }
 
-/* Infima's secondary button is near-white, which dissolves into a warm
-   banner. Navy is the other half of the same logo, so the call to action
-   borrows it back and carries the cream lettering the banner gave up. */
-.heroBanner .buttons :global(.button) {
-  background-color: var(--patb-color-navy);
-  border-color: var(--patb-color-navy);
-  color: var(--patb-color-cream);
-}
-
-.heroBanner .buttons :global(.button:hover),
-.heroBanner .buttons :global(.button:focus-visible) {
-  background-color: var(--patb-color-navy-darkest);
-  border-color: var(--patb-color-navy-darkest);
-  color: var(--patb-color-cream);
-}
+/* Infima's own secondary button is near-white with dark text, which is
+   already the right shape against a dark banner — it needed overriding only
+   while this hero was a bright warm colour that dissolved it. Left alone. */
 
 /* hue-rotate is kept to a narrow +-8deg swing (not a full 0-360 sweep) so
-   the glitch motion stays inside the patb-color warm family rather than
-   sweeping the whole wheel. */
+   the glitch motion stays inside the green rather than sweeping the whole
+   wheel into teal or olive. */
 @keyframes heroGradientGlitch {
   0%,
   100% {
