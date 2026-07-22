@@ -24,51 +24,71 @@ On startup, the CLI:
 
 - **Converse** — type your message and press `Enter`. The CLI triggers a run on the
   remote thread and streams the response back.
-- **Progress tracking** — background workflow state (for example
-  `🔄 [writerState] running`) is written to `stderr`, keeping `stdout` clean if you
-  redirect or pipe it.
+- **Progress tracking** — run state is written to `stderr`, keeping `stdout` clean if
+  you redirect or pipe it. The remote service reports a single node, `the-brain`, so
+  in practice you see one line as a turn starts and one as it finishes.
 - **Exit** — type `exit` or `quit` to end the session.
+
+## What the agent does with your message
+
+The remote agent is a guided journey, not a general-purpose chatbot: greet, pick a
+topic, pick a subtopic, then either learn about it or have an article written. It asks
+one question at a time and always ends a turn with the next one, so the usual opening
+move is simply to say hello and answer what it asks.
 
 ## Example transcript
 
 ```text
 ==================================================
 🧠 Pinky and the Brain - Remote Agent CLI REPL
-Initializing remote session...
+Initializing remote session (API Key: abcd...wxyz)...
 ==================================================
 🧵 Remote Thread ID: thread_abc123xyz
 Type your message to prompt the agent workflow.
 Type 'exit' or 'quit' to end the session.
 ==================================================
 
-👤 You: How do we take over the world tonight?
+👤 You: hello
 
 🤖 Agent executing...
 
-🔄 [instructorState] running
-🔄 [writerState] running
+🔄 [the-brain] Starting agent workflow for: the-brain
+🔄 [the-brain] Run complete
 
 --------------------------------------------------
 🤖 Response:
-Gee, Pinky, the same thing we do every night—try to take over the world!
+Ah, Pinky! Behold the four pillars of tonight's potential enlightenment:
 
-Our plan tonight involves:
-1. Building a giant electromagnetic magnet.
-2. Targeting the global digital communications satellite grid.
-3. Demanding 100 million dollars in exchange for restoring internet access.
+1. AWS Cloud Practitioner Certification — the CLF-C02 exam.
+2. Cellular Automata — Conway's Game of Life, Wolfram, Lenia, particle life.
+3. English for Certifications — IELTS, TOEFL and Cambridge.
+4. Technical Interview Preparation — role-based roadmaps.
+
+Which shall we conquer first?
 --------------------------------------------------
 ```
 
+The thread id is what makes this a conversation: every turn you type goes to the same
+remote thread, so the agent remembers the topic you chose and the article in progress.
+Restarting the CLI starts a new thread, and the journey begins again.
+
 ## How responses are chosen
 
-Each streamed `complete` event carries a workflow-specific result payload. The CLI
-(via `connectAWSStream` in `src/remote.ts`) picks the response text in this priority
-order:
-1. `writerState.draftArticle` (if present and not yet saved).
-2. `instructorState.explanation`.
-3. `developerState.testResults` (rendered as a pass/exit-code summary).
-4. The last AI message in `messages`.
-5. A generic `"Workflow completed successfully."` fallback, or the reported `error`.
+Each streamed `complete` event carries the run's result. `connectAWSStream` in
+`src/remote.ts` resolves the text to show in this order:
+
+1. A reported `error`, surfaced as `Error: <message>`.
+2. `instructorState.explanation` — in practice, always this one.
+3. The AI messages in `messages`, joined, as a fallback.
+4. A generic `"Workflow completed successfully."`.
+
+Step 2 is the whole story in normal operation. The name is a leftover: the service once
+routed a supervisor to several specialist nodes, each returning its own slice of state,
+and this client picked between a writer's draft, an instructor's explanation and a
+developer's test results. That architecture is gone — there is one agent now — but the
+service deliberately kept `instructorState.explanation` as the field every reply
+arrives in, so clients like this one did not have to change. A lesson, a finished
+article and a publish report all come through it.
 
 For running as a background agent server instead of an interactive terminal session,
 see [Zed Bridge Usage](./zed-bridge-usage).

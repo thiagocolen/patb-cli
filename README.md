@@ -98,7 +98,7 @@ patb-cli
 
 #### Interactive CLI Controls
 * **Converse**: Type your query and press `Enter`.
-* **Progress Tracking**: The CLI outputs background task states (e.g., `🔄 [writerState] running`) to `stderr` so that `stdout` remains clean.
+* **Progress Tracking**: The CLI outputs run state (e.g., `🔄 [the-brain] Run complete`) to `stderr` so that `stdout` remains clean.
 * **Exit**: Type `exit` or `quit` to end the session.
 
 ---
@@ -160,28 +160,30 @@ If no flags are supplied, the CLI defaults to the Interactive REPL mode.
 ```text
 ==================================================
 🧠 Pinky and the Brain - Remote Agent CLI REPL
-Initializing remote session...
+Initializing remote session (API Key: abcd...wxyz)...
 ==================================================
 🧵 Remote Thread ID: thread_abc123xyz
 Type your message to prompt the agent workflow.
 Type 'exit' or 'quit' to end the session.
 ==================================================
 
-👤 You: How do we take over the world tonight?
+👤 You: hello
 
 🤖 Agent executing...
 
-🔄 [instructorState] running
-🔄 [writerState] running
+🔄 [the-brain] Starting agent workflow for: the-brain
+🔄 [the-brain] Run complete
 
 --------------------------------------------------
 🤖 Response:
-Gee, Pinky, the same thing we do every night—try to take over the world!
+Ah, Pinky! Behold the four pillars of tonight's potential enlightenment:
 
-Our plan tonight involves:
-1. Building a giant electromagnetic magnet.
-2. Targeting the global digital communications satellite grid.
-3. Demanding 100 million dollars in exchange for restoring internet access.
+1. AWS Cloud Practitioner Certification — the CLF-C02 exam.
+2. Cellular Automata — Conway's Game of Life, Wolfram, Lenia, particle life.
+3. English for Certifications — IELTS, TOEFL and Cambridge.
+4. Technical Interview Preparation — role-based roadmaps.
+
+Which shall we conquer first?
 --------------------------------------------------
 ```
 

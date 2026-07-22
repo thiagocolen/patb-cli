@@ -107,18 +107,22 @@ export function connectAWSStream(
             if (parsed.event === "progress") {
               callbacks.onProgress(parsed.progress.node, parsed.progress.status);
             } else if (parsed.event === "complete") {
+              // The service used to route a supervisor to several specialist
+              // nodes, each returning its own slice of state, and this branch
+              // once picked between writerState.draftArticle,
+              // instructorState.explanation and developerState.testResults.
+              // That architecture is gone: there is one agent now, and every
+              // reply — a lesson, an article, a publish report — arrives in
+              // `instructorState.explanation`, which the service keeps for
+              // exactly this reason. The other two shapes can no longer be
+              // sent, so testing for them only obscured what actually happens.
               let responseText = "";
-              if (
-                parsed.data?.result?.writerState?.draftArticle &&
-                !parsed.data.result.writerState.isSaved
-              ) {
-                responseText = parsed.data.result.writerState.draftArticle;
+              if (parsed.data?.error) {
+                responseText = `Error: ${parsed.data.error}`;
               } else if (parsed.data?.result?.instructorState?.explanation) {
                 responseText = parsed.data.result.instructorState.explanation;
-              } else if (parsed.data?.result?.developerState?.testResults) {
-                const res = parsed.data.result.developerState.testResults;
-                responseText = `## Developer Workflow Execution\n\npassed: ${res.passed}, exitCode: ${res.exitCode}`;
               } else if (parsed.data?.result?.messages) {
+                // Fallback for a run that produced messages but no explanation.
                 const aiMsgs = (parsed.data.result.messages || [])
                   .filter(
                     (m: any) => m.type === "ai" || m.lc === 1 || m.kwargs?.content,
@@ -128,8 +132,6 @@ export function connectAWSStream(
                   aiMsgs.length > 0
                     ? aiMsgs.join("\n\n")
                     : "Workflow completed.";
-              } else if (parsed.data?.error) {
-                responseText = `Error: ${parsed.data.error}`;
               } else {
                 responseText = "Workflow completed successfully.";
               }

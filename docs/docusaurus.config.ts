@@ -21,6 +21,15 @@ const config: Config = {
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
 
+  // Both are required, and neither is useful alone: the flag tells MDX to hand
+  // ```mermaid blocks to a diagram renderer, and the theme is what supplies
+  // one. Without them Docusaurus treats the block as ordinary code and prints
+  // the graph definition as text — which is what this site did until now.
+  markdown: {
+    mermaid: true,
+  },
+  themes: ['@docusaurus/theme-mermaid'],
+
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
@@ -49,11 +58,15 @@ const config: Config = {
   ],
 
   themeConfig: {
+    image: 'img/docusaurus-social-card.jpg',
     navbar: {
       title: 'patb-cli',
+      // The same badge the agent's own docs carry, byte for byte. This CLI is a
+      // client of that service, not a separate product, so it wears the same
+      // mark; only the hero's warm ramp tells the two sites apart.
       logo: {
-        alt: 'patb-cli Logo',
-        src: 'img/logo.svg',
+        alt: 'Pinky and the Brain Logo',
+        src: 'img/logo.png',
       },
       items: [
         {

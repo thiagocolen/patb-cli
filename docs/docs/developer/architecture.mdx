@@ -62,10 +62,18 @@ sequenceDiagram
 
 ## Response selection
 
-The remote service's `complete` event payload can carry several different workflow
-result shapes (writer/instructor/developer states, or a plain message list).
-`connectAWSStream` applies a fixed priority order to pick the text to surface — see
+The remote service returns each reply in `instructorState.explanation`, and
+`connectAWSStream` reads it from there, falling back to the run's `messages` and
+finally to a generic completion notice — see
 [CLI Usage](/docs/end-user/cli-usage#how-responses-are-chosen) for the exact order.
+
+That field name is a leftover worth knowing about. The service once routed a supervisor
+node to several specialists, each contributing its own slice of state, and this client
+chose between a writer's draft, an instructor's explanation and a developer's test
+results. The service has since been rebuilt as a single agent, and it keeps
+`instructorState.explanation` precisely so that clients like this one did not have to
+change. The branches for the other two shapes have been removed: they could no longer
+be sent, and testing for them only disguised how simple the contract now is.
 
 ## Configuration boundary
 
