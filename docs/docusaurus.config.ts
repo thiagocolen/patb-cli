@@ -21,6 +21,15 @@ const config: Config = {
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
 
+  // Both are required, and neither is useful alone: the flag tells MDX to hand
+  // ```mermaid blocks to a diagram renderer, and the theme is what supplies
+  // one. Without them Docusaurus treats the block as ordinary code and prints
+  // the graph definition as text — which is what this site did until now.
+  markdown: {
+    mermaid: true,
+  },
+  themes: ['@docusaurus/theme-mermaid'],
+
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
