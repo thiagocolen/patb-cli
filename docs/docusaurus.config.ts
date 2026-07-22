@@ -49,11 +49,15 @@ const config: Config = {
   ],
 
   themeConfig: {
+    image: 'img/docusaurus-social-card.jpg',
     navbar: {
       title: 'patb-cli',
+      // The same badge the agent's own docs carry, byte for byte. This CLI is a
+      // client of that service, not a separate product, so it wears the same
+      // mark; only the hero's warm ramp tells the two sites apart.
       logo: {
-        alt: 'patb-cli Logo',
-        src: 'img/logo.svg',
+        alt: 'Pinky and the Brain Logo',
+        src: 'img/logo.png',
       },
       items: [
         {

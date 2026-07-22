@@ -43,6 +43,22 @@
   --patb-color-navy: #206090;
   --patb-color-navy-light: #2a7dbc;
 
+  /* The warm ramp, for the hero banner, shared verbatim with the agent's docs
+     so the two sites are one family. Only the two ends are sampled from the
+     logo (gold, and red); amber and orange are interpolated across that span.
+     Each site takes a different slice of it: the agent's docs run gold ->
+     orange, and this one — being the hotter, more operational half of the
+     pair — runs orange -> red. */
+  --patb-color-amber: #f9a814;
+  --patb-color-orange: #f5920f;
+
+  /* Ink for text sitting on the warm ramp. Cream is unreadable there — 3.3:1
+     against red, 1.6:1 against gold — so this is the brand navy darkened until
+     the darkest stop of either hero ramp clears WCAG AA against it. This
+     site's red stop is the binding constraint on how dark it has to be, at
+     4.8:1; the agent's darkest stop (orange) sits at 7.2:1. */
+  --patb-color-ink: #0a1f2e;
+
   --ifm-background-color: var(--patb-color-cream);
   --ifm-blockquote-border-color: var(--patb-color-gold);
 }
