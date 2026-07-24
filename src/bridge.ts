@@ -1,7 +1,9 @@
 import readline from "readline";
 import { createAWSThread, triggerAWSRun, connectAWSStream } from "./remote.js";
+import { deliverArtifact } from "./delivery.js";
+import type { CliOptions } from "./config.js";
 
-export function runBridgeMode(apiKey: string) {
+export function runBridgeMode({ apiKey, outDir, allowAnyPath }: CliOptions) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -10,6 +12,11 @@ export function runBridgeMode(apiKey: string) {
 
   let isInitialized = false;
   const sessions = new Map<string, string>(); // localSessionId -> AWS threadId
+
+  // Files already written to disk, so a later turn does not rewrite what the
+  // completion frame re-lists. Scoped by thread, and by content so that a
+  // revised article is delivered again.
+  const delivered = new Set<string>();
 
   rl.on("line", async (line) => {
     if (!line.trim()) return;
@@ -90,45 +97,62 @@ export function runBridgeMode(apiKey: string) {
 
           try {
             const runId = await triggerAWSRun(apiKey, session, promptText);
-            
+            const deliveries: Promise<void>[] = [];
+
+            /**
+             * Says something in the session's transcript.
+             *
+             * stdout is the JSON-RPC channel here, so a delivery report cannot
+             * simply be printed the way the REPL prints it — it has to be a
+             * protocol message or it corrupts the stream.
+             */
+            const say = (id: string, text: string) => {
+              console.log(
+                JSON.stringify({
+                  jsonrpc: "2.0",
+                  method: "session/update",
+                  params: {
+                    sessionId: request.params.sessionId,
+                    update: {
+                      sessionUpdate: "agent_message_chunk",
+                      messageId: id,
+                      content: { type: "text", text },
+                    },
+                  },
+                })
+              );
+            };
+
             connectAWSStream(
               apiKey,
               session,
               runId,
               {
                 onProgress: (node, status) => {
-                  const progressMessage = `🔄 [${node}] ${status}`;
-                  console.log(
-                    JSON.stringify({
-                      jsonrpc: "2.0",
-                      method: "session/update",
-                      params: {
-                        sessionId: request.params.sessionId,
-                        update: {
-                          sessionUpdate: "agent_message_chunk",
-                          messageId: `progress_${node}_${Date.now()}`,
-                          content: { type: "text", text: `${progressMessage}\n` },
-                        },
+                  say(`progress_${node}_${Date.now()}`, `🔄 [${node}] ${status}\n`);
+                },
+                onArtifact: (artifact) => {
+                  const seen = `${session}:${artifact.name}@${artifact.sha256}`;
+                  if (delivered.has(seen)) return;
+                  delivered.add(seen);
+
+                  deliveries.push(
+                    deliverArtifact(apiKey, session, artifact, { outDir, allowAnyPath }, {
+                      onSaved: (target) => say(`artifact_${Date.now()}`, `💾 Saved to ${target}\n`),
+                      onFailed: (message) => {
+                        delivered.delete(seen);
+                        say(`artifact_${Date.now()}`, `⚠️  ${message}\n`);
                       },
-                    })
+                    }),
                   );
                 },
-                onComplete: (responseText) => {
+                onComplete: async (responseText) => {
+                  // Report the files before the reply that refers to them, and
+                  // before the turn is declared over.
+                  await Promise.all(deliveries);
+
                   // Send final response text chunk
-                  console.log(
-                    JSON.stringify({
-                      jsonrpc: "2.0",
-                      method: "session/update",
-                      params: {
-                        sessionId: request.params.sessionId,
-                        update: {
-                          sessionUpdate: "agent_message_chunk",
-                          messageId: `result_${Date.now()}`,
-                          content: { type: "text", text: responseText },
-                        },
-                      },
-                    })
-                  );
+                  say(`result_${Date.now()}`, responseText);
 
                   // End turn
                   console.log(
