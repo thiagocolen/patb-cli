@@ -11,13 +11,15 @@
     "build": "tsc",
     "docs:install": "npm install --prefix docs",
     "docs:start": "npm run start --prefix docs",
-    "docs:build": "npm run build --prefix docs"
+    "docs:build": "npm run build --prefix docs",
+    "test:unit": "vitest run src/tests"
   },
   "dependencies": {
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "@types/node": "^20.14.9",
-    "typescript": "^5.5.2"
+    "typescript": "^5.5.2",
+    "vitest": "^1.6.1"
   }
 }
