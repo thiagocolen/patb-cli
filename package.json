@@ -7,8 +7,35 @@
   "bin": {
     "patb-cli": "./dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "acp",
+    "zed",
+    "cli",
+    "agent",
+    "pinky-and-the-brain"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thiagocolen/patb-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thiagocolen/patb-cli/issues"
+  },
+  "homepage": "https://github.com/thiagocolen/patb-cli#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run test:unit",
     "docs:install": "npm install --prefix docs",
     "docs:start": "npm run start --prefix docs",
     "docs:build": "npm run build --prefix docs",
