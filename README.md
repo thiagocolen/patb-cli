@@ -11,6 +11,7 @@ With `patb-cli`, you can converse with the remote agent directly from your termi
 - **Interactive CLI REPL**: Start a direct conversation with the agent in your terminal.
 - **Zed ACP Bridge**: Implements the ACP (JSON-RPC 2.0 over standard I/O) to function as a Zed-compatible external agent server.
 - **Real-Time Streaming**: Supports progress notifications and real-time streaming of response chunks.
+- **File Delivery**: Files the agent writes are downloaded and saved to *your* disk, not left on the server it runs on.
 - **Auto-Config**: Loads configuration parameters (such as the API key) from environment variables or a local `.env` file.
 
 ---
@@ -24,9 +25,38 @@ graph TD
     A[User / Zed Editor] -->|Interactive Prompt or ACP RPC| B(patb-cli)
     B -->|1. Create Thread| C[Remote Service]
     B -->|2. Trigger Run| C
-    C -->|3. Event Stream| B
-    B -->|4. Format Output / Progress| A
+    C -->|3. Event Stream + artifact announcements| B
+    B -->|4. Fetch artifact bytes| C
+    B -->|5. Write file to local disk| D[(Your filesystem)]
+    B -->|6. Format Output / Progress| A
 ```
+
+### Where files land
+
+The agent runs in a container. A tool that writes with `fs` writes to *that* filesystem — a real
+path, on a disk you cannot reach — which is why an article "saved" by the hosted agent used to
+appear nowhere at all.
+
+So the service does not report such a path. It publishes what it wrote as a **retrievable
+artifact**: the run's event stream announces the file with its name, size and SHA-256, and this CLI
+downloads it, verifies the hash, writes it to your own disk and prints where it went.
+
+```text
+💾 Saved to D:\_code-projects\articles\game-of-life.md
+```
+
+Files go to `./articles` by default, relative to wherever you started the CLI. Both the filename and
+any folder the agent names arrive over the network from a language model, so writes are confined to
+that directory unless you say otherwise with `--allow-any-path`. A refused write is reported, never
+silent:
+
+```text
+⚠️  Could not save "aimed.md": The agent asked to write "aimed.md" to "C:\Windows\Temp", which is
+    outside D:\_code-projects\articles. Re-run with --allow-any-path to permit that, or use
+    --out-dir to move the directory artifacts are written to.
+```
+
+The article stays on the service either way, so a failed delivery can be retried by asking again.
 
 ---
 
@@ -148,6 +178,9 @@ Example snippet for `settings.json`:
 |------|-------|-------------|
 | `--bridge` | `-b` | Starts the server in Zed ACP JSON-RPC 2.0 Bridge mode. |
 | `--help` | `-h` | Prints the CLI help menu showing usage and exits. |
+| `--out-dir <path>` | | Directory files the agent writes are saved to. Default `./articles`, relative to the current directory. Env: `PATBA_OUT_DIR`. |
+| `--allow-any-path` | | Permits a write outside `--out-dir` when you have asked the agent for a specific folder. Off by default. |
+| `--host <url>` | | Service to talk to. Defaults to the deployed one; useful for pointing at a server running locally. Env: `PATBA_HOST`. |
 
 If no flags are supplied, the CLI defaults to the Interactive REPL mode.
 
