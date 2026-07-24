@@ -43,6 +43,18 @@
   --patb-color-navy: #206090;
   --patb-color-navy-light: #2a7dbc;
 
+  /* The hero ramp. Unlike everything above it, these are *not* sampled from
+     the logo — the badge has no green in it. They are a deliberate departure,
+     chosen so this site reads as its own thing beside the agent's docs, which
+     keep the warm gold-to-orange banner. The shared logo and favicon are what
+     hold the two together; the banner is what tells them apart.
+
+     The ramp is dark enough that the cream lettering clears AAA at every stop:
+     13.1:1 at the darkest, 7.2:1 at the lightest. */
+  --patb-color-green-darkest: #0a3325;
+  --patb-color-green-dark: #10553a;
+  --patb-color-green: #14603f;
+
   --ifm-background-color: var(--patb-color-cream);
   --ifm-blockquote-border-color: var(--patb-color-gold);
 }
